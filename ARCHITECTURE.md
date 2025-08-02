@@ -720,7 +720,7 @@ export interface AppConfig {
 FROM node:18-alpine AS builder
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci --only=production
+RUN npm i --only=production
 
 FROM node:18-alpine AS production
 WORKDIR /app

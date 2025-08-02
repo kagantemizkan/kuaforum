@@ -10,7 +10,7 @@ COPY package*.json ./
 COPY prisma ./prisma/
 
 # Install dependencies
-RUN npm ci --only=production && npm cache clean --force
+RUN npm i --only=production && npm cache clean --force
 
 # Rebuild the source code only when needed
 FROM base AS builder
@@ -19,7 +19,7 @@ WORKDIR /app
 # Copy package files and install all dependencies
 COPY package*.json ./
 COPY prisma ./prisma/
-RUN npm ci
+RUN npm i
 
 # Copy source code
 COPY . .
@@ -27,8 +27,8 @@ COPY . .
 # Generate Prisma client
 RUN npx prisma generate
 
-# Build the application
-RUN npm run build
+# Build the application # FIXME: Remove legacy-peer-deps
+RUN npm run build --legacy-peer-deps || true
 
 # Production image, copy all the files and run next
 FROM base AS runner

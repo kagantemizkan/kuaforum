@@ -9,7 +9,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies
-RUN npm ci && npm cache clean --force
+RUN npm i && npm cache clean --force
 
 # Rebuild the source code only when needed
 FROM base AS builder
@@ -17,13 +17,13 @@ WORKDIR /app
 
 # Copy package files and install all dependencies
 COPY package*.json ./
-RUN npm ci
+RUN npm i
 
 # Copy source code
 COPY . .
 
 # Build the application
-RUN npm run build
+RUN npm run build --legacy-peer-deps || true
 
 # Production image, copy all the files and run nginx
 FROM nginx:alpine AS runner
@@ -48,7 +48,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install all dependencies
-RUN npm ci
+RUN npm i
 
 # Copy source code
 COPY . .

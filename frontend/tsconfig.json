@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "jsx": "react-jsx", // ✅ Modern React JSX runtime
+    "module": "ESNext",
+    "target": "ESNext",
+    "moduleResolution": "Node",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "allowJs": true, // ✅ Allows JS if any JS files exist
+    "resolveJsonModule": true, // ✅ Allows importing .json files
+    "isolatedModules": true // ✅ Important for React apps with Babel
+  },
+  "include": ["src"],
+  "exclude": ["node_modules", "build"]
+}
