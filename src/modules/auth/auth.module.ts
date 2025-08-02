@@ -8,6 +8,8 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 import { LocalStrategy } from './strategies/local.strategy';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RolesGuard } from './guards/roles.guard';
+import { SmsOtpService } from './services/sms-otp.service';
+import { OAuthService } from './services/oauth.service';
 import jwtConfig from '../../config/jwt.config';
 
 @Module({
@@ -28,6 +30,8 @@ import jwtConfig from '../../config/jwt.config';
   controllers: [AuthController],
   providers: [
     AuthService,
+    SmsOtpService,
+    OAuthService,
     JwtStrategy,
     LocalStrategy,
     JwtAuthGuard,
