@@ -2,7 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe, Logger } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
-import * as helmet from 'helmet';
+// import * as helmet from 'helmet';
 import * as compression from 'compression';
 import * as cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
@@ -18,11 +18,11 @@ async function bootstrap() {
   const port = configService.get('PORT') || 3000;
   const nodeEnv = configService.get('NODE_ENV') || 'development';
 
-  // Security middleware
-  app.use(helmet({
-    contentSecurityPolicy: false, // Disable for development
-    crossOriginEmbedderPolicy: false,
-  }));
+  // Security middleware - commented out for now
+  // app.use(helmet({
+  //   contentSecurityPolicy: false, // Disable for development
+  //   crossOriginEmbedderPolicy: false,
+  // }));
 
   // Compression middleware
   app.use(compression());
