@@ -23,6 +23,13 @@ apiClient.interceptors.request.use(
     // Add request timestamp for debugging
     config.headers['X-Request-Time'] = new Date().toISOString();
     
+    // Add authorization header if token exists
+    const token = localStorage.getItem('accessToken') || 
+                 document.cookie.match(/accessToken=([^;]+)/)?.[1];
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    
     return config;
   },
   (error) => {
@@ -47,6 +54,11 @@ apiClient.interceptors.response.use(
           break;
         case 401:
           console.error('Unauthorized:', data);
+          // Clear tokens on 401 errors
+          localStorage.removeItem('accessToken');
+          localStorage.removeItem('refreshToken');
+          document.cookie = 'accessToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+          document.cookie = 'refreshToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
           break;
         case 403:
           console.error('Forbidden:', data);
@@ -97,8 +109,28 @@ export class ApiService {
     refresh: (refreshToken: string) =>
       apiClient.post('/auth/refresh', { refreshToken }),
     
-    logout: () =>
-      apiClient.post('/auth/logout'),
+    logout: (refreshToken?: string) =>
+      apiClient.post('/auth/logout', refreshToken ? { refreshToken } : {}),
+
+    // OAuth endpoints
+    googleOAuth: (data: { accessToken: string; idToken?: string }) =>
+      apiClient.post('/auth/oauth/google', data),
+
+    appleOAuth: (data: { 
+      identityToken: string; 
+      authorizationCode?: string; 
+      email?: string; 
+      firstName?: string; 
+      lastName?: string; 
+    }) =>
+      apiClient.post('/auth/oauth/apple', data),
+
+    // Profile and status endpoints
+    getProfile: () =>
+      apiClient.get('/auth/me'),
+
+    checkStatus: () =>
+      apiClient.get('/auth/status'),
   };
 
   // User endpoints
