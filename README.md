@@ -1,250 +1,356 @@
-# Hair Salon Ecosystem - Backend
+# 💇‍♀️ Hair Salon Ecosystem - Backend API
 
-A production-grade, multi-tenant hair salon ecosystem backend built with NestJS. This system supports React Native mobile apps for customers and React web dashboards for salon staff/owners.
+A production-grade, multi-tenant hair salon ecosystem backend built with NestJS, featuring comprehensive API testing frontend, Docker containerization, and extensive third-party integrations.
 
-## 🏗️ System Overview
+## 🏗️ Architecture Overview
 
-This backend provides a complete solution for hair salon management with the following key features:
+This is a complete backend system for managing hair salons with the following key features:
 
-- **Multi-tenant Architecture**: Each salon operates in complete data isolation
-- **AI-Powered Style Suggestions**: Generate hairstyle recommendations from selfies
-- **QR Code System**: Easy salon joining and booking via QR codes
-- **Subscription Management**: RevenueCat integration for salon tiers
-- **Comprehensive Booking System**: Advanced scheduling with conflict detection
-- **Loyalty Program**: Points-based reward system
-- **Real-time Notifications**: Push, email, and SMS notifications
-- **Analytics & Reporting**: Business intelligence for salon owners
+- **Multi-tenant Architecture**: Each salon operates with complete data isolation
+- **Comprehensive API**: RESTful endpoints for all salon operations
+- **Real-time Features**: WebSocket support for live updates
+- **AI Integration**: Style suggestions using advanced AI models
+- **Payment Processing**: RevenueCat integration for subscription management
+- **Queue System**: Background job processing with BullMQ and Redis
+- **Security First**: JWT authentication, RBAC, rate limiting, and input validation
+- **Testing Interface**: Built-in React frontend for API testing and development
 
-## 📱 Applications
-
-### Customer App (React Native)
-
-- Salon discovery and comparison
-- AI-powered style suggestions
-- QR code scanning for salon joining
-- Appointment booking and management
-- Loyalty points and rewards
-
-### Salon Dashboard (React Web)
-
-- Staff and service management
-- Booking calendar and scheduling
-- Revenue analytics and reporting
-- Subscription tier management
-- Customer relationship management
-
-## 🚀 Quick Start
+## 🚀 Quick Start with Docker
 
 ### Prerequisites
 
-- Node.js 18+
-- PostgreSQL 14+
-- Redis 6+
-- Docker (optional)
+- Docker and Docker Compose installed
+- Git
 
-### Installation
+### 1. Clone and Setup
 
 ```bash
-# Clone the repository
-git clone https://github.com/your-org/hair-salon-ecosystem.git
-cd hair-salon-ecosystem
+git clone <repository-url>
+cd hair-salon-ecosystem-backend
 
-# Install dependencies
-npm install
-
-# Set up environment variables
+# Copy environment variables
 cp .env.example .env
-# Edit .env with your configuration
 
-# Set up database
-npm run db:migrate
-npm run db:seed
-
-# Start development server
-npm run start:dev
+# Edit .env file with your configuration
+nano .env
 ```
 
-### Environment Configuration
+### 2. Start All Services
+
+```bash
+# Start all services (backend, frontend, database, Redis, etc.)
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop all services
+docker-compose down
+```
+
+### 3. Access the Application
+
+- **API Testing Frontend**: http://localhost:3001
+- **Backend API**: http://localhost:3000
+- **API Documentation**: http://localhost:3000/api-docs
+- **Database Admin (Adminer)**: http://localhost:8080
+- **Redis Commander**: http://localhost:8081
+- **Health Check**: http://localhost:3000/health
+
+## 📋 Services Overview
+
+| Service | Port | Description |
+|---------|------|-------------|
+| Backend API | 3000 | NestJS backend server |
+| Frontend Tester | 3001 | React API testing interface |
+| PostgreSQL | 5432 | Primary database |
+| Redis | 6379 | Caching and queue system |
+| Adminer | 8080 | Database management UI |
+| Redis Commander | 8081 | Redis management UI |
+| Nginx | 80/443 | Reverse proxy (production) |
+
+## 🛠️ Development Setup (Without Docker)
+
+### Prerequisites
+
+- Node.js 18+ and npm
+- PostgreSQL 15+
+- Redis 7+
+
+### 1. Install Dependencies
+
+```bash
+# Backend dependencies
+npm install
+
+# Frontend dependencies
+cd frontend
+npm install
+cd ..
+```
+
+### 2. Database Setup
+
+```bash
+# Set up environment variables
+cp .env.example .env
+
+# Generate Prisma client
+npx prisma generate
+
+# Run database migrations
+npx prisma migrate dev
+
+# Seed database (optional)
+npx prisma db seed
+```
+
+### 3. Start Development Servers
+
+```bash
+# Start backend (terminal 1)
+npm run start:dev
+
+# Start frontend (terminal 2)
+cd frontend
+npm start
+```
+
+## 📚 API Documentation
+
+### Authentication
+
+All API endpoints (except public ones) require authentication via JWT tokens.
+
+```bash
+# Login example
+curl -X POST http://localhost:3000/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email": "admin@hairsalon.com", "password": "Admin123!"}'
+```
+
+### Core Endpoints
+
+#### Authentication
+- `POST /v1/auth/login` - User login
+- `POST /v1/auth/register` - User registration  
+- `POST /v1/auth/refresh` - Refresh access token
+- `POST /v1/auth/logout` - User logout
+
+#### Users
+- `GET /v1/users/profile` - Get current user profile
+- `PUT /v1/users/profile` - Update user profile
+- `POST /v1/users/avatar` - Upload user avatar
+
+#### Salons
+- `GET /v1/salons` - List salons with filtering
+- `GET /v1/salons/:id` - Get salon details
+- `POST /v1/salons` - Create new salon
+- `PUT /v1/salons/:id` - Update salon
+- `DELETE /v1/salons/:id` - Delete salon
+
+#### Bookings
+- `GET /v1/bookings` - List user bookings
+- `POST /v1/bookings` - Create new booking
+- `GET /v1/bookings/:id` - Get booking details
+- `PUT /v1/bookings/:id/cancel` - Cancel booking
+
+#### AI Style Suggestions
+- `POST /v1/ai/suggestions` - Upload image for AI analysis
+- `GET /v1/ai/suggestions/:id` - Get AI suggestion results
+
+#### QR Codes
+- `POST /v1/qr/generate` - Generate QR code
+- `POST /v1/qr/validate` - Validate QR code
+
+### Complete API documentation is available at `/api-docs` when running the server.
+
+## 🧪 Testing the API
+
+### Using the Built-in Frontend
+
+1. Start the application with Docker or development setup
+2. Navigate to http://localhost:3001
+3. Login with demo credentials:
+   - Admin: `admin@hairsalon.com` / `Admin123!`
+   - Salon Owner: `owner@salon.com` / `Owner123!`
+   - Customer: `customer@example.com` / `Customer123!`
+4. Test all API endpoints through the intuitive interface
+
+### Using curl
+
+```bash
+# Get access token
+TOKEN=$(curl -X POST http://localhost:3000/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email": "admin@hairsalon.com", "password": "Admin123!"}' \
+  | jq -r '.data.tokens.accessToken')
+
+# Use token for authenticated requests
+curl -X GET http://localhost:3000/v1/users/profile \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+## 🔧 Configuration
+
+### Environment Variables
+
+Key environment variables (see `.env.example` for complete list):
 
 ```bash
 # Database
-DATABASE_URL="postgresql://user:password@localhost:5432/hairsalon"
+DATABASE_URL="postgresql://user:password@localhost:5432/db"
 
-# JWT Authentication
-JWT_SECRET="your-super-secret-jwt-key"
-JWT_REFRESH_SECRET="your-super-secret-refresh-key"
-
-# Third-party Services
-REPLICATE_API_KEY="your-replicate-api-key"
-REVENUECAT_API_KEY="your-revenuecat-api-key"
-CLOUDINARY_CLOUD_NAME="your-cloud-name"
-CLOUDINARY_API_KEY="your-api-key"
-CLOUDINARY_API_SECRET="your-api-secret"
+# JWT
+JWT_SECRET="your-secret-key"
+JWT_REFRESH_SECRET="your-refresh-secret"
 
 # Redis
-REDIS_HOST="localhost"
-REDIS_PORT="6379"
-REDIS_PASSWORD="your-redis-password"
+REDIS_HOST=localhost
+REDIS_PORT=6379
+REDIS_PASSWORD=your-password
 
-# Notifications
-EXPO_ACCESS_TOKEN="your-expo-access-token"
-SENDGRID_API_KEY="your-sendgrid-api-key"
-TWILIO_ACCOUNT_SID="your-twilio-account-sid"
-TWILIO_AUTH_TOKEN="your-twilio-auth-token"
+# Third-party services
+CLOUDINARY_CLOUD_NAME=your-cloudinary-name
+SENDGRID_API_KEY=your-sendgrid-key
+TWILIO_ACCOUNT_SID=your-twilio-sid
+REPLICATE_API_KEY=your-replicate-key
+REVENUECAT_API_KEY=your-revenuecat-key
 ```
 
-## 📚 Documentation
+### Feature Flags
 
-### Core Documentation
+Enable/disable features using environment variables:
 
-- **[Architecture Guide](ARCHITECTURE.md)** - Complete system architecture and design
-- **[Sprint Planning](SPRINT_PLAN.md)** - Development roadmap and user stories
-- **[API Contracts](API_CONTRACTS.md)** - Complete API documentation and contracts
-- **[Third-Party Integrations](THIRD_PARTY_INTEGRATIONS.md)** - External service integrations
-
-### Development Guides
-
-- [Database Schema](ARCHITECTURE.md#database-schema-prisma) - Prisma schema and models
-- [Security Architecture](ARCHITECTURE.md#security-architecture) - Authentication and authorization
-- [Testing Strategy](ARCHITECTURE.md#testing-strategy) - Unit, integration, and E2E testing
-- [Deployment Guide](ARCHITECTURE.md#deployment-architecture) - Production deployment
-
-## 🏗️ Architecture
-
-### Module Structure
-
-```
-src/
-├── modules/
-│   ├── auth/           # JWT, refresh tokens, OAuth
-│   ├── users/          # Customer profiles, preferences
-│   ├── salons/         # Multi-tenant salon management
-│   ├── bookings/       # Appointment scheduling
-│   ├── services/       # Salon services and pricing
-│   ├── qr/            # QR code generation/validation
-│   ├── ai/            # AI style suggestions
-│   ├── payments/      # RevenueCat integration
-│   ├── notifications/ # Push/email/SMS
-│   ├── analytics/     # Revenue, metrics, reporting
-│   └── admin/         # Super admin functions
-├── common/            # Shared utilities, guards, decorators
-├── config/           # Environment, database configs
-└── database/         # Prisma schema, migrations
+```bash
+FEATURE_AI_SUGGESTIONS=true
+FEATURE_QR_CODES=true
+FEATURE_PUSH_NOTIFICATIONS=true
+FEATURE_SMS_NOTIFICATIONS=true
+FEATURE_EMAIL_NOTIFICATIONS=true
 ```
 
-### Key Features
+## 🏢 Multi-Tenancy
 
-#### 🔐 Multi-Tenant Security
+The system supports complete multi-tenancy:
 
-- Complete data isolation between salons
-- Role-based access control (RBAC)
-- Salon-scoped permissions and guards
-- Secure JWT authentication with refresh tokens
+- **Data Isolation**: Each salon's data is completely isolated
+- **Role-Based Access**: Different permission levels (Admin, Salon Owner, Staff, Customer)
+- **Subscription Tiers**: Different feature sets based on subscription level
+- **Salon Context**: All operations are scoped to the appropriate salon
 
-#### 🤖 AI Integration
+## 🔐 Security Features
 
-- Replicate API for hair style suggestions
-- Image validation and content moderation
-- Asynchronous processing with queue system
-- Rate limiting and abuse prevention
+- **JWT Authentication**: Secure token-based authentication
+- **Refresh Tokens**: Long-lived refresh tokens for seamless UX
+- **Rate Limiting**: Configurable rate limits per endpoint
+- **Input Validation**: Comprehensive request validation
+- **RBAC**: Role-based access control
+- **Data Encryption**: Sensitive data encrypted at rest
+- **CORS Protection**: Configurable CORS policies
+- **Helmet Security**: Security headers and protections
 
-#### 💳 Subscription Management
+## 📊 Monitoring & Observability
 
-- RevenueCat integration for billing
-- Tier-based feature access
-- Usage tracking and limits
-- Webhook handling for subscription events
+- **Health Checks**: Built-in health check endpoints
+- **Structured Logging**: Comprehensive logging with Winston
+- **Error Tracking**: Sentry integration for error monitoring
+- **Performance Metrics**: Request timing and performance tracking
+- **Queue Monitoring**: BullMQ dashboard for job monitoring
 
-#### 📱 QR Code System
+## 🚀 Deployment
 
-- Secure QR code generation
-- Usage tracking and analytics
-- Expiration and usage limits
-- Anti-tampering measures
+### Docker Production Deployment
 
-#### 📊 Analytics Engine
+```bash
+# Build production images
+docker-compose -f docker-compose.prod.yml build
 
-- Real-time revenue tracking
-- Customer insights and retention
-- Staff performance metrics
-- Business intelligence dashboards
+# Deploy to production
+docker-compose -f docker-compose.prod.yml up -d
+```
+
+### Manual Deployment
+
+```bash
+# Build the application
+npm run build
+
+# Run database migrations
+npx prisma migrate deploy
+
+# Start production server
+npm run start:prod
+```
+
+## 📈 Performance & Scaling
+
+- **Horizontal Scaling**: Load balancer ready
+- **Database Optimization**: Indexed queries and connection pooling
+- **Caching**: Redis-based caching for frequently accessed data
+- **Queue Processing**: Background job processing for heavy operations
+- **CDN Integration**: Cloudinary for image optimization and delivery
 
 ## 🧪 Testing
 
 ```bash
-# Unit tests
+# Run unit tests
 npm run test
 
-# Integration tests
+# Run e2e tests
 npm run test:e2e
 
-# Test coverage
+# Run tests with coverage
 npm run test:cov
-
-# Load testing
-npm run test:load
 ```
 
-## 🚀 Deployment
+## 📝 API Testing Examples
 
-### Docker Deployment
+### Create a Salon
 
-```bash
-# Build Docker image
-docker build -t hair-salon-backend .
+```javascript
+// Using the frontend testing interface
+const salonData = {
+  name: "Elegant Hair Studio",
+  description: "Premium hair styling services",
+  address: "123 Main Street",
+  city: "New York",
+  country: "USA",
+  phone: "+1234567890",
+  email: "info@elegant.com"
+};
 
-# Run with Docker Compose
-docker-compose up -d
+// POST /v1/salons
 ```
 
-### Production Checklist
+### Book an Appointment
 
-- [ ] Environment variables configured
-- [ ] Database migrations applied
-- [ ] SSL certificates installed
-- [ ] Monitoring and logging configured
-- [ ] Backup strategy implemented
-- [ ] Security audit completed
+```javascript
+const bookingData = {
+  salonId: "salon-uuid",
+  serviceId: "service-uuid",
+  appointmentDate: "2024-02-15T14:00:00Z",
+  notes: "First time customer"
+};
 
-## 📈 Performance
+// POST /v1/bookings
+```
 
-### Benchmarks
+### Upload Image for AI Suggestions
 
-- **API Response Time**: <200ms for 95% of requests
-- **Database Query Time**: <50ms for simple queries
-- **Image Upload Processing**: <5 seconds
-- **AI Suggestion Generation**: <10 seconds
+```javascript
+const formData = new FormData();
+formData.append('image', imageFile);
+formData.append('preferences', JSON.stringify({
+  hairType: "STRAIGHT",
+  faceShape: "OVAL",
+  stylePreferences: ["SHORT", "LAYERED"]
+}));
 
-### Scaling Strategies
-
-- Horizontal scaling with load balancers
-- Database read replicas
-- Redis caching for frequently accessed data
-- CDN for static assets and images
-- Queue-based background processing
-
-## 🔐 Security
-
-### Security Features
-
-- JWT authentication with refresh token rotation
-- Role-based access control (RBAC)
-- Input validation and sanitization
-- Rate limiting and abuse prevention
-- SQL injection prevention with Prisma
-- XSS and CSRF protection
-- Secure file upload validation
-
-### Compliance
-
-- GDPR compliance for user data
-- PCI compliance for payment data
-- Data encryption at rest and in transit
-- Regular security audits and penetration testing
+// POST /v1/ai/suggestions
+```
 
 ## 🤝 Contributing
-
-### Development Workflow
 
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
@@ -252,44 +358,27 @@ docker-compose up -d
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-### Code Standards
-
-- Follow TypeScript best practices
-- Use ESLint and Prettier for code formatting
-- Write comprehensive tests
-- Document all public APIs
-- Follow conventional commit messages
-
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the LICENSE file for details.
 
 ## 🆘 Support
 
-### Getting Help
+- **Documentation**: Check `/api-docs` for detailed API documentation
+- **Issues**: Create an issue on GitHub for bugs or feature requests
+- **Discussions**: Use GitHub Discussions for questions and community support
 
-- **Documentation**: Check the comprehensive documentation above
-- **Issues**: Report bugs and feature requests via GitHub Issues
-- **Discussions**: Join community discussions on GitHub Discussions
-- **Email**: Contact support@hairsalonecosystem.com
+## 🔄 Changelog
 
-### Community
-
-- **Discord**: Join our [Discord server](https://discord.gg/hairsalonecosystem)
-- **Twitter**: Follow [@HairSalonEco](https://twitter.com/HairSalonEco)
-- **Blog**: Read our [technical blog](https://blog.hairsalonecosystem.com)
-
-## 🏆 Acknowledgments
-
-- **NestJS** - The amazing framework that powers this backend
-- **Prisma** - Modern database toolkit
-- **Replicate** - AI model hosting platform
-- **RevenueCat** - Subscription management
-- **Cloudinary** - Image storage and processing
-- **Expo** - React Native push notifications
+### v1.0.0 (Current)
+- Initial release with complete backend API
+- Multi-tenant architecture
+- AI integration for style suggestions
+- Comprehensive API testing frontend
+- Docker containerization
+- Third-party service integrations
+- Production-ready security and monitoring
 
 ---
 
 **Built with ❤️ for the hair salon industry**
-
-This backend provides a solid foundation for building scalable, secure, and feature-rich hair salon management applications. The modular architecture ensures maintainability and extensibility as your business grows.
