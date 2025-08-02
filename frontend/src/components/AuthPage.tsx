@@ -84,7 +84,7 @@ const AuthPage: React.FC = () => {
     }
   };
 
-  const loginForm = (
+  const loginFormElement = (
     <Form
       form={loginForm}
       name="login"
@@ -133,7 +133,7 @@ const AuthPage: React.FC = () => {
     </Form>
   );
 
-  const registerForm = (
+  const registerFormElement = (
     <Form
       form={registerForm}
       name="register"
@@ -271,12 +271,12 @@ const AuthPage: React.FC = () => {
     {
       key: 'login',
       label: 'Sign In',
-      children: loginForm,
+      children: loginFormElement,
     },
     {
       key: 'register',
       label: 'Sign Up',
-      children: registerForm,
+      children: registerFormElement,
     },
   ];
 
