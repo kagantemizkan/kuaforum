@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from 'react';
 import Cookies from 'js-cookie';
 import { ApiService, apiClient } from '../services/apiClient';
 import toast from 'react-hot-toast';
@@ -48,29 +54,6 @@ interface AppleOAuthData {
   lastName?: string;
 }
 
-interface AuthResponse {
-  success: boolean;
-  message: string;
-  user: User;
-  tokens: {
-    accessToken: string;
-    refreshToken: string;
-    expiresIn: number;
-    tokenType: string;
-  };
-}
-
-interface RefreshResponse {
-  success: boolean;
-  message: string;
-  tokens: {
-    accessToken: string;
-    refreshToken: string;
-    expiresIn: number;
-    tokenType: string;
-  };
-}
-
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const useAuth = () => {
@@ -97,16 +80,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const storedRefreshToken = Cookies.get('refreshToken');
     const storedUser = Cookies.get('user');
 
-            if (storedToken && storedRefreshToken && storedUser) {
+    if (storedToken && storedRefreshToken && storedUser) {
       try {
         const userData = JSON.parse(storedUser);
         setToken(storedToken);
         setRefreshToken(storedRefreshToken);
         setUser(userData);
-        apiClient.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
+        apiClient.defaults.headers.common['Authorization'] =
+          `Bearer ${storedToken}`;
       } catch (error) {
         console.error('Error parsing stored user data:', error);
-        await logout();
+        logout();
       }
     }
     setIsLoading(false);
@@ -119,7 +103,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       if (response.data.success) {
         const { user: userData, tokens } = response.data;
-        
+
         setUser(userData);
         setToken(tokens.accessToken);
         setRefreshToken(tokens.refreshToken);
@@ -130,7 +114,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         Cookies.set('user', JSON.stringify(userData), { expires: 7 });
 
         // Set authorization header
-        apiClient.defaults.headers.common['Authorization'] = `Bearer ${tokens.accessToken}`;
+        apiClient.defaults.headers.common['Authorization'] =
+          `Bearer ${tokens.accessToken}`;
 
         toast.success(`Welcome back, ${userData.firstName}!`);
       }
@@ -150,7 +135,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       if (response.data.success) {
         const { user: newUser, tokens } = response.data;
-        
+
         setUser(newUser);
         setToken(tokens.accessToken);
         setRefreshToken(tokens.refreshToken);
@@ -161,9 +146,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         Cookies.set('user', JSON.stringify(newUser), { expires: 7 });
 
         // Set authorization header
-        apiClient.defaults.headers.common['Authorization'] = `Bearer ${tokens.accessToken}`;
+        apiClient.defaults.headers.common['Authorization'] =
+          `Bearer ${tokens.accessToken}`;
 
-        toast.success(`Welcome, ${newUser.firstName}! Account created successfully.`);
+        toast.success(
+          `Welcome, ${newUser.firstName}! Account created successfully.`,
+        );
       }
     } catch (error: any) {
       const message = error.response?.data?.message || 'Registration failed';
@@ -209,8 +197,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const response = await ApiService.auth.refresh(refreshToken);
 
       if (response.data.success) {
-        const { accessToken, refreshToken: newRefreshToken } = response.data.tokens;
-        
+        const { accessToken, refreshToken: newRefreshToken } =
+          response.data.tokens;
+
         setToken(accessToken);
         setRefreshToken(newRefreshToken);
 
@@ -219,7 +208,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         Cookies.set('refreshToken', newRefreshToken, { expires: 7 });
 
         // Update authorization header
-        apiClient.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
+        apiClient.defaults.headers.common['Authorization'] =
+          `Bearer ${accessToken}`;
       }
     } catch (error: any) {
       console.error('Token refresh failed:', error);
@@ -228,14 +218,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const googleOAuth = async (accessToken: string, idToken?: string): Promise<void> => {
+  const googleOAuth = async (
+    accessToken: string,
+    idToken?: string,
+  ): Promise<void> => {
     try {
       setIsLoading(true);
-      const response = await ApiService.auth.googleOAuth({ accessToken, idToken });
+      const response = await ApiService.auth.googleOAuth({
+        accessToken,
+        idToken,
+      });
 
       if (response.data.success) {
         const { user: userData, tokens } = response.data;
-        
+
         setUser(userData);
         setToken(tokens.accessToken);
         setRefreshToken(tokens.refreshToken);
@@ -246,12 +242,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         Cookies.set('user', JSON.stringify(userData), { expires: 7 });
 
         // Set authorization header
-        apiClient.defaults.headers.common['Authorization'] = `Bearer ${tokens.accessToken}`;
+        apiClient.defaults.headers.common['Authorization'] =
+          `Bearer ${tokens.accessToken}`;
 
         toast.success(`Welcome, ${userData.firstName}!`);
       }
     } catch (error: any) {
-      const message = error.response?.data?.message || 'Google authentication failed';
+      const message =
+        error.response?.data?.message || 'Google authentication failed';
       toast.error(message);
       throw error;
     } finally {
@@ -266,7 +264,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       if (response.data.success) {
         const { user: userData, tokens } = response.data;
-        
+
         setUser(userData);
         setToken(tokens.accessToken);
         setRefreshToken(tokens.refreshToken);
@@ -277,12 +275,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         Cookies.set('user', JSON.stringify(userData), { expires: 7 });
 
         // Set authorization header
-        apiClient.defaults.headers.common['Authorization'] = `Bearer ${tokens.accessToken}`;
+        apiClient.defaults.headers.common['Authorization'] =
+          `Bearer ${tokens.accessToken}`;
 
         toast.success(`Welcome, ${userData.firstName}!`);
       }
     } catch (error: any) {
-      const message = error.response?.data?.message || 'Apple authentication failed';
+      const message =
+        error.response?.data?.message || 'Apple authentication failed';
       toast.error(message);
       throw error;
     } finally {
@@ -298,13 +298,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
       throw new Error('Failed to fetch profile');
     } catch (error: any) {
-      const message = error.response?.data?.message || 'Failed to fetch profile';
+      const message =
+        error.response?.data?.message || 'Failed to fetch profile';
       toast.error(message);
       throw error;
     }
   };
 
-  const checkStatus = async (): Promise<{ authenticated: boolean; user: any }> => {
+  const checkStatus = async (): Promise<{
+    authenticated: boolean;
+    user: any;
+  }> => {
     try {
       const response = await ApiService.auth.checkStatus();
       return response.data;
@@ -320,10 +324,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       (response) => response,
       async (error) => {
         const originalRequest = error.config;
-        
+
         if (error.response?.status === 401 && !originalRequest._retry) {
           originalRequest._retry = true;
-          
+
           try {
             await refreshAccessToken();
             return apiClient(originalRequest);
@@ -331,9 +335,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             return Promise.reject(refreshError);
           }
         }
-        
+
         return Promise.reject(error);
-      }
+      },
     );
 
     return () => {
@@ -356,9 +360,5 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     isLoading,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

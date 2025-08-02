@@ -49,7 +49,7 @@ const StyledTabs = styled(Tabs)`
   .ant-tabs-nav {
     margin-bottom: 32px;
   }
-  
+
   .ant-tabs-tab {
     font-size: 16px;
     font-weight: 500;
@@ -77,15 +77,15 @@ const AuthPage: React.FC = () => {
   const [oauthLoading, setOauthLoading] = useState(false);
   const [testingLoading, setTestingLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { 
-    user, 
-    login, 
-    register, 
-    logout, 
-    googleOAuth, 
-    appleOAuth, 
-    getProfile, 
-    checkStatus 
+  const {
+    user,
+    login,
+    register,
+    logout,
+    googleOAuth,
+    appleOAuth,
+    getProfile,
+    checkStatus,
   } = useAuth();
 
   const [loginForm] = Form.useForm();
@@ -141,7 +141,7 @@ const AuthPage: React.FC = () => {
         identityToken: 'dummy_apple_identity_token_for_testing',
         email: 'test@privaterelay.appleid.com',
         firstName: 'John',
-        lastName: 'Doe'
+        lastName: 'Doe',
       };
       await appleOAuth(dummyData);
       message.success('Apple OAuth test initiated (dummy token used)');
@@ -156,7 +156,9 @@ const AuthPage: React.FC = () => {
     try {
       setTestingLoading(true);
       const profile = await getProfile();
-      message.success(`Profile fetched: ${profile.firstName} ${profile.lastName}`);
+      message.success(
+        `Profile fetched: ${profile.firstName} ${profile.lastName}`,
+      );
       console.log('Profile data:', profile);
     } catch (error: any) {
       message.error(error.response?.data?.message || 'Failed to fetch profile');
@@ -169,7 +171,9 @@ const AuthPage: React.FC = () => {
     try {
       setTestingLoading(true);
       const status = await checkStatus();
-      message.success(`Auth status: ${status.authenticated ? 'Authenticated' : 'Not authenticated'}`);
+      message.success(
+        `Auth status: ${status.authenticated ? 'Authenticated' : 'Not authenticated'}`,
+      );
       console.log('Status data:', status);
     } catch (error: any) {
       message.error('Failed to check status');
@@ -251,7 +255,9 @@ const AuthPage: React.FC = () => {
           <Form.Item
             name="firstName"
             label="First Name"
-            rules={[{ required: true, message: 'Please input your first name!' }]}
+            rules={[
+              { required: true, message: 'Please input your first name!' },
+            ]}
           >
             <Input
               prefix={<UserOutlined />}
@@ -264,7 +270,9 @@ const AuthPage: React.FC = () => {
           <Form.Item
             name="lastName"
             label="Last Name"
-            rules={[{ required: true, message: 'Please input your last name!' }]}
+            rules={[
+              { required: true, message: 'Please input your last name!' },
+            ]}
           >
             <Input
               prefix={<UserOutlined />}
@@ -290,10 +298,7 @@ const AuthPage: React.FC = () => {
         />
       </Form.Item>
 
-      <Form.Item
-        name="phone"
-        label="Phone Number (Optional)"
-      >
+      <Form.Item name="phone" label="Phone Number (Optional)">
         <Input
           prefix={<PhoneOutlined />}
           placeholder="Enter your phone number"
@@ -321,8 +326,10 @@ const AuthPage: React.FC = () => {
           { required: true, message: 'Please input your password!' },
           { min: 8, message: 'Password must be at least 8 characters!' },
           {
-            pattern: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/,
-            message: 'Password must contain uppercase, lowercase, number and special character!',
+            pattern:
+              /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/,
+            message:
+              'Password must contain uppercase, lowercase, number and special character!',
           },
         ]}
         hasFeedback
@@ -333,7 +340,7 @@ const AuthPage: React.FC = () => {
           autoComplete="new-password"
         />
       </Form.Item>
-
+      {/* 
       <Form.Item
         name="confirmPassword"
         label="Confirm Password"
@@ -356,7 +363,7 @@ const AuthPage: React.FC = () => {
           placeholder="Confirm your password"
           autoComplete="new-password"
         />
-      </Form.Item>
+      </Form.Item> */}
 
       <Form.Item>
         <Button
@@ -388,11 +395,12 @@ const AuthPage: React.FC = () => {
   return (
     <div style={{ padding: '50px 20px' }}>
       <StyledCard>
-        <StyledTitle level={2}>
-          Hair Salon Ecosystem
-        </StyledTitle>
-        
-        <Text type="secondary" style={{ display: 'block', textAlign: 'center', marginBottom: 24 }}>
+        <StyledTitle level={2}>Hair Salon Ecosystem</StyledTitle>
+
+        <Text
+          type="secondary"
+          style={{ display: 'block', textAlign: 'center', marginBottom: 24 }}
+        >
           API Testing Interface - Authentication Required
         </Text>
 
@@ -453,7 +461,13 @@ const AuthPage: React.FC = () => {
               Auth Endpoint Testing
             </Title>
             <Space direction="vertical" style={{ width: '100%' }}>
-              <Text style={{ textAlign: 'center', display: 'block', marginBottom: 16 }}>
+              <Text
+                style={{
+                  textAlign: 'center',
+                  display: 'block',
+                  marginBottom: 16,
+                }}
+              >
                 Welcome, {user.firstName} {user.lastName}! ({user.role})
               </Text>
               <Button
@@ -502,7 +516,8 @@ const AuthPage: React.FC = () => {
             Customer: customer@example.com / Customer123!
           </Text>
           <Text type="secondary" style={{ fontSize: '12px', marginTop: 8 }}>
-            <strong>Note:</strong> OAuth buttons use dummy tokens for testing backend endpoints.
+            <strong>Note:</strong> OAuth buttons use dummy tokens for testing
+            backend endpoints.
           </Text>
         </Space>
       </StyledCard>

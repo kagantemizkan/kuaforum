@@ -22,7 +22,7 @@ import {
   ProfileOutlined,
   CheckCircleOutlined,
   LogoutOutlined,
-  RefreshOutlined,
+  RestOutlined,
   UserOutlined,
   LoginOutlined,
   UserAddOutlined,
@@ -60,18 +60,27 @@ const AuthTestingPage: React.FC = () => {
   const [responses, setResponses] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState<Record<string, boolean>>({});
   const [showRawResponses, setShowRawResponses] = useState(false);
-  const { user, login, register, logout, googleOAuth, appleOAuth, getProfile, checkStatus } = useAuth();
+  const {
+    user,
+    login,
+    register,
+    logout,
+    googleOAuth,
+    appleOAuth,
+    getProfile,
+    checkStatus,
+  } = useAuth();
 
   const [loginForm] = Form.useForm();
   const [registerForm] = Form.useForm();
   const [oauthForm] = Form.useForm();
 
   const setLoadingState = (key: string, value: boolean) => {
-    setLoading(prev => ({ ...prev, [key]: value }));
+    setLoading((prev) => ({ ...prev, [key]: value }));
   };
 
   const setResponse = (key: string, response: any) => {
-    setResponses(prev => ({ ...prev, [key]: response }));
+    setResponses((prev) => ({ ...prev, [key]: response }));
   };
 
   const handleLogin = async (values: any) => {
@@ -105,7 +114,8 @@ const AuthTestingPage: React.FC = () => {
   const handleRefreshToken = async () => {
     try {
       setLoadingState('refresh', true);
-      const refreshToken = localStorage.getItem('refreshToken') || 'dummy_refresh_token';
+      const refreshToken =
+        localStorage.getItem('refreshToken') || 'dummy_refresh_token';
       const response = await ApiService.auth.refresh(refreshToken);
       setResponse('refresh', response.data);
       message.success('Token refresh successful');
@@ -192,9 +202,7 @@ const AuthTestingPage: React.FC = () => {
     if (!response) return null;
 
     return (
-      <ResponseDisplay>
-        {JSON.stringify(response, null, 2)}
-      </ResponseDisplay>
+      <ResponseDisplay>{JSON.stringify(response, null, 2)}</ResponseDisplay>
     );
   };
 
@@ -203,7 +211,7 @@ const AuthTestingPage: React.FC = () => {
       <Title level={2}>
         <ApiOutlined /> Auth Endpoints Testing Interface
       </Title>
-      
+
       <Row style={{ marginBottom: 16 }}>
         <Col>
           <Space>
@@ -224,21 +232,37 @@ const AuthTestingPage: React.FC = () => {
 
       <Collapse defaultActiveKey={user ? ['profile'] : ['login']}>
         <Panel header="Login" key="login">
-          <StyledCard title="POST /auth/login" extra={<Tag color="blue">Public</Tag>}>
+          <StyledCard
+            title="POST /auth/login"
+            extra={<Tag color="blue">Public</Tag>}
+          >
             <Form form={loginForm} onFinish={handleLogin} layout="vertical">
               <Row gutter={16}>
                 <Col span={12}>
-                  <Form.Item name="email" label="Email" rules={[{ required: true, type: 'email' }]}>
+                  <Form.Item
+                    name="email"
+                    label="Email"
+                    rules={[{ required: true, type: 'email' }]}
+                  >
                     <Input placeholder="admin@hairsalon.com" />
                   </Form.Item>
                 </Col>
                 <Col span={12}>
-                  <Form.Item name="password" label="Password" rules={[{ required: true }]}>
+                  <Form.Item
+                    name="password"
+                    label="Password"
+                    rules={[{ required: true }]}
+                  >
                     <Input.Password placeholder="Admin123!" />
                   </Form.Item>
                 </Col>
               </Row>
-              <Button type="primary" htmlType="submit" loading={loading.login} icon={<LoginOutlined />}>
+              <Button
+                type="primary"
+                htmlType="submit"
+                loading={loading.login}
+                icon={<LoginOutlined />}
+              >
                 Test Login
               </Button>
             </Form>
@@ -247,23 +271,42 @@ const AuthTestingPage: React.FC = () => {
         </Panel>
 
         <Panel header="Register" key="register">
-          <StyledCard title="POST /auth/register" extra={<Tag color="blue">Public</Tag>}>
-            <Form form={registerForm} onFinish={handleRegister} layout="vertical">
+          <StyledCard
+            title="POST /auth/register"
+            extra={<Tag color="blue">Public</Tag>}
+          >
+            <Form
+              form={registerForm}
+              onFinish={handleRegister}
+              layout="vertical"
+            >
               <Row gutter={16}>
                 <Col span={12}>
-                  <Form.Item name="firstName" label="First Name" rules={[{ required: true }]}>
+                  <Form.Item
+                    name="firstName"
+                    label="First Name"
+                    rules={[{ required: true }]}
+                  >
                     <Input placeholder="John" />
                   </Form.Item>
                 </Col>
                 <Col span={12}>
-                  <Form.Item name="lastName" label="Last Name" rules={[{ required: true }]}>
+                  <Form.Item
+                    name="lastName"
+                    label="Last Name"
+                    rules={[{ required: true }]}
+                  >
                     <Input placeholder="Doe" />
                   </Form.Item>
                 </Col>
               </Row>
               <Row gutter={16}>
                 <Col span={12}>
-                  <Form.Item name="email" label="Email" rules={[{ required: true, type: 'email' }]}>
+                  <Form.Item
+                    name="email"
+                    label="Email"
+                    rules={[{ required: true, type: 'email' }]}
+                  >
                     <Input placeholder="john.doe@example.com" />
                   </Form.Item>
                 </Col>
@@ -275,17 +318,30 @@ const AuthTestingPage: React.FC = () => {
               </Row>
               <Row gutter={16}>
                 <Col span={12}>
-                  <Form.Item name="role" label="Role" rules={[{ required: true }]}>
+                  <Form.Item
+                    name="role"
+                    label="Role"
+                    rules={[{ required: true }]}
+                  >
                     <Input placeholder="CUSTOMER" />
                   </Form.Item>
                 </Col>
                 <Col span={12}>
-                  <Form.Item name="password" label="Password" rules={[{ required: true }]}>
+                  <Form.Item
+                    name="password"
+                    label="Password"
+                    rules={[{ required: true }]}
+                  >
                     <Input.Password placeholder="Password123!" />
                   </Form.Item>
                 </Col>
               </Row>
-              <Button type="primary" htmlType="submit" loading={loading.register} icon={<UserAddOutlined />}>
+              <Button
+                type="primary"
+                htmlType="submit"
+                loading={loading.register}
+                icon={<UserAddOutlined />}
+              >
                 Test Register
               </Button>
             </Form>
@@ -294,15 +350,31 @@ const AuthTestingPage: React.FC = () => {
         </Panel>
 
         <Panel header="Google OAuth" key="google">
-          <StyledCard title="POST /auth/oauth/google" extra={<Tag color="blue">Public</Tag>}>
-            <Form form={oauthForm} onFinish={handleGoogleOAuth} layout="vertical">
-              <Form.Item name="accessToken" label="Access Token" rules={[{ required: true }]}>
+          <StyledCard
+            title="POST /auth/oauth/google"
+            extra={<Tag color="blue">Public</Tag>}
+          >
+            <Form
+              form={oauthForm}
+              onFinish={handleGoogleOAuth}
+              layout="vertical"
+            >
+              <Form.Item
+                name="accessToken"
+                label="Access Token"
+                rules={[{ required: true }]}
+              >
                 <TextArea placeholder="ya29.a0ARrdaM9..." rows={3} />
               </Form.Item>
               <Form.Item name="idToken" label="ID Token (Optional)">
                 <TextArea placeholder="eyJhbGciOiJSUzI1NiIs..." rows={3} />
               </Form.Item>
-              <Button type="primary" htmlType="submit" loading={loading.google} icon={<GoogleOutlined />}>
+              <Button
+                type="primary"
+                htmlType="submit"
+                loading={loading.google}
+                icon={<GoogleOutlined />}
+              >
                 Test Google OAuth
               </Button>
             </Form>
@@ -311,13 +383,29 @@ const AuthTestingPage: React.FC = () => {
         </Panel>
 
         <Panel header="Apple OAuth" key="apple">
-          <StyledCard title="POST /auth/oauth/apple" extra={<Tag color="blue">Public</Tag>}>
+          <StyledCard
+            title="POST /auth/oauth/apple"
+            extra={<Tag color="blue">Public</Tag>}
+          >
             <Form onFinish={handleAppleOAuth} layout="vertical">
-              <Form.Item name="identityToken" label="Identity Token" rules={[{ required: true }]}>
-                <TextArea placeholder="eyJraWQiOiJlWGF1bm1MIiwiYWxnIjoiUlMyNTYifQ..." rows={3} />
+              <Form.Item
+                name="identityToken"
+                label="Identity Token"
+                rules={[{ required: true }]}
+              >
+                <TextArea
+                  placeholder="eyJraWQiOiJlWGF1bm1MIiwiYWxnIjoiUlMyNTYifQ..."
+                  rows={3}
+                />
               </Form.Item>
-              <Form.Item name="authorizationCode" label="Authorization Code (Optional)">
-                <TextArea placeholder="c6a9d4c8e7f4b2d3a1e5f8c9b2d4e7f1a3c5e8f9..." rows={2} />
+              <Form.Item
+                name="authorizationCode"
+                label="Authorization Code (Optional)"
+              >
+                <TextArea
+                  placeholder="c6a9d4c8e7f4b2d3a1e5f8c9b2d4e7f1a3c5e8f9..."
+                  rows={2}
+                />
               </Form.Item>
               <Row gutter={16}>
                 <Col span={8}>
@@ -336,7 +424,12 @@ const AuthTestingPage: React.FC = () => {
                   </Form.Item>
                 </Col>
               </Row>
-              <Button type="primary" htmlType="submit" loading={loading.apple} icon={<AppleOutlined />}>
+              <Button
+                type="primary"
+                htmlType="submit"
+                loading={loading.apple}
+                icon={<AppleOutlined />}
+              >
                 Test Apple OAuth
               </Button>
             </Form>
@@ -345,11 +438,20 @@ const AuthTestingPage: React.FC = () => {
         </Panel>
 
         <Panel header="Refresh Token" key="refresh">
-          <StyledCard title="POST /auth/refresh" extra={<Tag color="blue">Public</Tag>}>
+          <StyledCard
+            title="POST /auth/refresh"
+            extra={<Tag color="blue">Public</Tag>}
+          >
             <Paragraph>
-              Tests the token refresh endpoint. Uses stored refresh token or dummy token for testing.
+              Tests the token refresh endpoint. Uses stored refresh token or
+              dummy token for testing.
             </Paragraph>
-            <Button type="primary" onClick={handleRefreshToken} loading={loading.refresh} icon={<RefreshOutlined />}>
+            <Button
+              type="primary"
+              onClick={handleRefreshToken}
+              loading={loading.refresh}
+              icon={<RestOutlined />}
+            >
               Test Refresh Token
             </Button>
             {showRawResponses && renderResponse('refresh')}
@@ -357,11 +459,20 @@ const AuthTestingPage: React.FC = () => {
         </Panel>
 
         <Panel header="Get Profile" key="profile">
-          <StyledCard title="GET /auth/me" extra={<Tag color="orange">Protected</Tag>}>
+          <StyledCard
+            title="GET /auth/me"
+            extra={<Tag color="orange">Protected</Tag>}
+          >
             <Paragraph>
-              Fetches the current user's profile. Requires valid authentication token.
+              Fetches the current user's profile. Requires valid authentication
+              token.
             </Paragraph>
-            <Button type="primary" onClick={handleGetProfile} loading={loading.profile} icon={<ProfileOutlined />}>
+            <Button
+              type="primary"
+              onClick={handleGetProfile}
+              loading={loading.profile}
+              icon={<ProfileOutlined />}
+            >
               Get Profile
             </Button>
             {showRawResponses && renderResponse('profile')}
@@ -369,11 +480,19 @@ const AuthTestingPage: React.FC = () => {
         </Panel>
 
         <Panel header="Check Status" key="status">
-          <StyledCard title="GET /auth/status" extra={<Tag color="orange">Protected</Tag>}>
+          <StyledCard
+            title="GET /auth/status"
+            extra={<Tag color="orange">Protected</Tag>}
+          >
             <Paragraph>
               Checks the authentication status and validates the current token.
             </Paragraph>
-            <Button type="primary" onClick={handleCheckStatus} loading={loading.status} icon={<CheckCircleOutlined />}>
+            <Button
+              type="primary"
+              onClick={handleCheckStatus}
+              loading={loading.status}
+              icon={<CheckCircleOutlined />}
+            >
               Check Auth Status
             </Button>
             {showRawResponses && renderResponse('status')}
@@ -381,11 +500,20 @@ const AuthTestingPage: React.FC = () => {
         </Panel>
 
         <Panel header="Logout" key="logout">
-          <StyledCard title="POST /auth/logout" extra={<Tag color="orange">Protected</Tag>}>
+          <StyledCard
+            title="POST /auth/logout"
+            extra={<Tag color="orange">Protected</Tag>}
+          >
             <Paragraph>
               Logs out the user and invalidates the refresh token.
             </Paragraph>
-            <Button type="primary" danger onClick={handleLogout} loading={loading.logout} icon={<LogoutOutlined />}>
+            <Button
+              type="primary"
+              danger
+              onClick={handleLogout}
+              loading={loading.logout}
+              icon={<LogoutOutlined />}
+            >
               Test Logout
             </Button>
             {showRawResponses && renderResponse('logout')}
@@ -394,7 +522,7 @@ const AuthTestingPage: React.FC = () => {
       </Collapse>
 
       <Divider />
-      
+
       <Title level={4}>Quick Test Credentials</Title>
       <Descriptions bordered size="small">
         <Descriptions.Item label="Admin" span={3}>
