@@ -1,0 +1,354 @@
+# Hair Salon Ecosystem - Backend Development Rules
+
+## Project Overview
+
+This is a production-grade, multi-tenant hair salon ecosystem backend built with NestJS. The system supports React Native mobile apps for customers and React web dashboards for salon staff/owners.
+
+## Architecture Principles
+
+- **Multi-tenancy**: Each salon operates in complete data isolation
+- **Modular Design**: Feature-based modules with clear boundaries
+- **Security First**: JWT auth, RBAC, input validation, rate limiting
+- **Scalability**: Queue-based processing, horizontal scaling ready
+- **Production Ready**: Comprehensive logging, monitoring, error handling
+
+## Code Organization
+
+### Module Structure
+
+```
+src/
+├── modules/
+│   ├── auth/           # JWT, refresh tokens, OAuth
+│   ├── users/          # Customer profiles, preferences
+│   ├── salons/         # Multi-tenant salon management
+│   ├── bookings/       # Appointment scheduling
+│   ├── services/       # Salon services and pricing
+│   ├── qr/            # QR code generation/validation
+│   ├── ai/            # AI style suggestions
+│   ├── payments/      # RevenueCat integration
+│   ├── notifications/ # Push/email/SMS
+│   ├── analytics/     # Revenue, metrics, reporting
+│   └── admin/         # Super admin functions
+├── common/            # Shared utilities, guards, decorators
+├── config/           # Environment, database configs
+└── database/         # Prisma schema, migrations
+```
+
+### Naming Conventions
+
+- **Files**: kebab-case (e.g., `user-profile.service.ts`)
+- **Classes**: PascalCase (e.g., `UserProfileService`)
+- **Methods**: camelCase (e.g., `getUserProfile`)
+- **Constants**: UPPER_SNAKE_CASE (e.g., `MAX_FILE_SIZE`)
+- **Interfaces**: PascalCase with 'I' prefix (e.g., `IUserProfile`)
+- **Enums**: PascalCase (e.g., `UserRole`, `BookingStatus`)
+
+## Database Design Rules
+
+### Prisma Schema Guidelines
+
+- Use UUIDs for all primary keys
+- Implement soft deletes with `deletedAt` timestamps
+- Add `createdAt` and `updatedAt` to all models
+- Use proper foreign key relationships
+- Implement multi-tenancy with `salonId` fields
+- Use enums for status fields
+
+### Multi-tenancy Implementation
+
+- Every salon-related table must have `salonId` field
+- Use middleware to inject salon context
+- Implement data isolation at query level
+- Salon owners can only access their own data
+
+## Security Requirements
+
+### Authentication & Authorization
+
+- JWT tokens with refresh token rotation
+- Role-based access control (RBAC)
+- Salon-scoped permissions
+- Rate limiting on all endpoints
+- Input validation with class-validator
+- SQL injection prevention with Prisma
+
+### File Upload Security
+
+- Validate MIME types and file extensions
+- Implement file size limits
+- Scan for malicious content
+- Store files in cloud storage (Cloudinary/S3)
+- Generate secure, signed URLs
+
+## API Design Standards
+
+### RESTful Endpoints
+
+- Use proper HTTP methods (GET, POST, PUT, DELETE, PATCH)
+- Implement consistent error responses
+- Use proper HTTP status codes
+- Include pagination for list endpoints
+- Implement filtering and sorting
+
+### Request/Response Structure
+
+```typescript
+// Request DTOs
+export class CreateBookingDto {
+  @IsUUID()
+  salonId: string;
+
+  @IsUUID()
+  serviceId: string;
+
+  @IsDateString()
+  appointmentDate: string;
+
+  @IsOptional()
+  @IsString()
+  notes?: string;
+}
+
+// Response DTOs
+export class BookingResponseDto {
+  id: string;
+  salonId: string;
+  customerId: string;
+  serviceId: string;
+  appointmentDate: Date;
+  status: BookingStatus;
+  createdAt: Date;
+  updatedAt: Date;
+}
+```
+
+## Error Handling
+
+### Global Exception Filter
+
+- Catch all exceptions and format responses
+- Log errors with proper context
+- Return consistent error structure
+- Hide sensitive information in production
+
+### Error Response Format
+
+```typescript
+{
+  statusCode: number;
+  message: string;
+  error: string;
+  timestamp: string;
+  path: string;
+  requestId?: string;
+}
+```
+
+## Third-Party Integrations
+
+### RevenueCat Integration
+
+- Webhook endpoint for subscription events
+- Plan enforcement middleware
+- Graceful handling of webhook failures
+- Retry mechanism for failed webhooks
+
+### AI Service Integration
+
+- Image validation before AI processing
+- Rate limiting for AI endpoints
+- Fallback handling for AI service failures
+- Content moderation for uploaded images
+
+### QR Code System
+
+- Generate unique, secure QR codes
+- Implement expiration and usage limits
+- Validate QR codes server-side
+- Handle QR code tampering attempts
+
+## Performance & Scalability
+
+### Database Optimization
+
+- Use database indexes for frequently queried fields
+- Implement query optimization
+- Use connection pooling
+- Consider read replicas for scaling
+
+### Caching Strategy
+
+- Cache frequently accessed data (salon info, services)
+- Implement cache invalidation
+- Use Redis for session storage
+- Cache AI responses when appropriate
+
+### Queue Processing
+
+- Use BullMQ for background jobs
+- Process image uploads asynchronously
+- Handle AI API calls in queues
+- Implement retry mechanisms
+
+## Testing Requirements
+
+### Unit Tests
+
+- Test all service methods
+- Mock external dependencies
+- Achieve >80% code coverage
+- Test error scenarios
+
+### Integration Tests
+
+- Test API endpoints
+- Test database operations
+- Test third-party integrations
+- Test authentication flows
+
+### E2E Tests
+
+- Test complete user journeys
+- Test multi-tenant scenarios
+- Test booking workflows
+- Test payment flows
+
+## Monitoring & Logging
+
+### Logging Standards
+
+- Use structured logging (JSON format)
+- Include correlation IDs
+- Log at appropriate levels (debug, info, warn, error)
+- Include context for debugging
+
+### Health Checks
+
+- Database connectivity
+- External service status
+- Queue health
+- Memory and CPU usage
+
+## Environment Configuration
+
+### Environment Variables
+
+- Use .env files for local development
+- Use environment variables in production
+- Validate required environment variables
+- Use different configs for different environments
+
+### Configuration Structure
+
+```typescript
+export interface AppConfig {
+  port: number;
+  database: {
+    url: string;
+    ssl: boolean;
+  };
+  jwt: {
+    secret: string;
+    expiresIn: string;
+    refreshExpiresIn: string;
+  };
+  ai: {
+    apiKey: string;
+    endpoint: string;
+  };
+  revenueCat: {
+    apiKey: string;
+    webhookSecret: string;
+  };
+}
+```
+
+## Development Workflow
+
+### Git Commit Messages
+
+- Use conventional commits format
+- Include ticket/issue numbers
+- Write descriptive commit messages
+- Keep commits atomic and focused
+
+### Code Review Checklist
+
+- Security vulnerabilities
+- Performance implications
+- Error handling
+- Test coverage
+- Documentation updates
+- Multi-tenant considerations
+
+## Documentation Requirements
+
+### API Documentation
+
+- Use Swagger/OpenAPI
+- Document all endpoints
+- Include request/response examples
+- Document error codes
+
+### Code Documentation
+
+- JSDoc for public methods
+- README for each module
+- Architecture decision records (ADRs)
+- Deployment guides
+
+## Deployment & DevOps
+
+### Docker Configuration
+
+- Multi-stage builds
+- Optimize image size
+- Use non-root user
+- Include health checks
+
+### CI/CD Pipeline
+
+- Automated testing
+- Security scanning
+- Database migrations
+- Blue-green deployments
+
+## Edge Cases to Handle
+
+### Booking System
+
+- Concurrent booking conflicts
+- Staff availability changes
+- Service cancellation handling
+- No-show policies
+
+### Multi-tenancy
+
+- Salon ownership transfers
+- Data isolation breaches
+- Cross-salon data access prevention
+- Tenant-specific configurations
+
+### Security
+
+- Token refresh attacks
+- Rate limit bypass attempts
+- File upload exploits
+- SQL injection attempts
+
+## Performance Benchmarks
+
+- API response time < 200ms for 95% of requests
+- Database query time < 50ms for simple queries
+- Image upload processing < 5 seconds
+- AI suggestion generation < 10 seconds
+
+## Compliance & Legal
+
+- GDPR compliance for user data
+- PCI compliance for payment data
+- Data retention policies
+- Privacy policy enforcement
+
+Remember: This is a production system handling real business data. Always prioritize security, reliability, and maintainability over development speed.
