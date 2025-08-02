@@ -7,10 +7,10 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 // import { join } from 'path';
 
 // Database
-// import { PrismaModule } from './database/prisma.module';
+import { PrismaModule } from './database/prisma.module';
 
-// Core modules - commented out until they exist
-// import { AuthModule } from './modules/auth/auth.module';
+// Core modules
+import { AuthModule } from './modules/auth/auth.module';
 // import { UsersModule } from './modules/users/users.module';
 // import { SalonsModule } from './modules/salons/salons.module';
 // import { ServicesModule } from './modules/services/services.module';
@@ -26,10 +26,10 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 // Common modules
 // import { CommonModule } from './common/common.module';
 
-// Configuration - commented out until they exist
-// import { appConfig } from './config/app.config';
-// import { databaseConfig } from './config/database.config';
-// import { jwtConfig } from './config/jwt.config';
+// Configuration
+import appConfig from './config/app.config';
+import databaseConfig from './config/database.config';
+import jwtConfig from './config/jwt.config';
 // import { redisConfig } from './config/redis.config';
 // import { cloudinaryConfig } from './config/cloudinary.config';
 
@@ -39,11 +39,12 @@ import { AppService } from './app.service';
 
 @Module({
   imports: [
-    // Configuration module with basic setup
+    // Configuration module with feature configs
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: ['.env.local', '.env'],
       cache: true,
+      load: [appConfig, databaseConfig, jwtConfig],
     }),
 
     // Rate limiting - commented out for now
@@ -89,13 +90,13 @@ import { AppService } from './app.service';
     // }),
 
     // Database
-    // PrismaModule,
+    PrismaModule,
 
     // Common utilities
     // CommonModule,
 
-    // Feature modules - commented out until they exist
-    // AuthModule,
+    // Feature modules
+    AuthModule,
     // UsersModule,
     // SalonsModule,
     // ServicesModule,
@@ -130,9 +131,9 @@ export class AppModule {
 
   private checkRequiredEnvVars() {
     const requiredVars = [
-      // 'DATABASE_URL', // commented out for now
-      // 'JWT_SECRET',
-      // 'JWT_REFRESH_SECRET',
+      'DATABASE_URL',
+      'JWT_SECRET',
+      'JWT_REFRESH_SECRET',
     ];
 
     const missingVars = requiredVars.filter(
