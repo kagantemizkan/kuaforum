@@ -23,6 +23,9 @@ import {
   GoogleOAuthDto,
   AppleOAuthDto,
   RefreshTokenDto,
+  SendOTPDto,
+  VerifyOTPDto,
+  PhoneRegistrationDto,
 } from './dto';
 import {
   AuthResponseDto,
@@ -285,5 +288,73 @@ export class AuthController {
         role: user.role,
       },
     };
+  }
+
+  @Public()
+  @Post('send-otp')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ 
+    summary: 'Send SMS OTP',
+    description: 'Send OTP verification code to phone number for registration or login'
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'OTP sent successfully',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Bad request - invalid phone number or rate limit exceeded',
+  })
+  @ApiBody({ type: SendOTPDto })
+  async sendOTP(@Body() sendOtpDto: SendOTPDto) {
+    this.logger.log(`OTP request for phone: ${sendOtpDto.phone}`);
+    return this.authService.sendOTP(sendOtpDto);
+  }
+
+  @Public()
+  @Post('verify-otp')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ 
+    summary: 'Verify SMS OTP',
+    description: 'Verify OTP code sent to phone number'
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'OTP verified successfully',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - invalid or expired OTP',
+  })
+  @ApiBody({ type: VerifyOTPDto })
+  async verifyOTP(@Body() verifyOtpDto: VerifyOTPDto) {
+    this.logger.log(`OTP verification for phone: ${verifyOtpDto.phone}`);
+    return this.authService.verifyOTP(verifyOtpDto);
+  }
+
+  @Public()
+  @Post('register-phone')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ 
+    summary: 'Register with phone number',
+    description: 'Complete registration using verified phone number'
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Registration successful',
+    type: AuthResponseDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Bad request - validation failed',
+  })
+  @ApiResponse({
+    status: 409,
+    description: 'Conflict - phone number already registered',
+  })
+  @ApiBody({ type: PhoneRegistrationDto })
+  async registerWithPhone(@Body() phoneRegistrationDto: PhoneRegistrationDto): Promise<AuthResponseDto> {
+    this.logger.log(`Phone registration for: ${phoneRegistrationDto.phone}`);
+    return this.authService.registerWithPhone(phoneRegistrationDto);
   }
 }

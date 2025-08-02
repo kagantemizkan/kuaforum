@@ -27,6 +27,8 @@ import {
   LoginOutlined,
   UserAddOutlined,
   ApiOutlined,
+  PhoneOutlined,
+  SafetyOutlined,
 } from '@ant-design/icons';
 import styled from 'styled-components';
 import { useAuth } from '../contexts/AuthContext';
@@ -74,6 +76,8 @@ const AuthTestingPage: React.FC = () => {
   const [loginForm] = Form.useForm();
   const [registerForm] = Form.useForm();
   const [oauthForm] = Form.useForm();
+  const [otpForm] = Form.useForm();
+  const [phoneRegForm] = Form.useForm();
 
   const setLoadingState = (key: string, value: boolean) => {
     setLoading((prev) => ({ ...prev, [key]: value }));
@@ -152,6 +156,48 @@ const AuthTestingPage: React.FC = () => {
       message.error('Apple OAuth failed');
     } finally {
       setLoadingState('apple', false);
+    }
+  };
+
+  const handleSendOTP = async (values: any) => {
+    try {
+      setLoadingState('sendOTP', true);
+      const response = await ApiService.auth.sendOTP(values);
+      setResponse('sendOTP', response.data);
+      message.success('OTP sent successfully');
+    } catch (error: any) {
+      setResponse('sendOTP', { error: error.response?.data || error.message });
+      message.error('Failed to send OTP');
+    } finally {
+      setLoadingState('sendOTP', false);
+    }
+  };
+
+  const handleVerifyOTP = async (values: any) => {
+    try {
+      setLoadingState('verifyOTP', true);
+      const response = await ApiService.auth.verifyOTP(values);
+      setResponse('verifyOTP', response.data);
+      message.success('OTP verified successfully');
+    } catch (error: any) {
+      setResponse('verifyOTP', { error: error.response?.data || error.message });
+      message.error('OTP verification failed');
+    } finally {
+      setLoadingState('verifyOTP', false);
+    }
+  };
+
+  const handlePhoneRegistration = async (values: any) => {
+    try {
+      setLoadingState('phoneReg', true);
+      const response = await ApiService.auth.registerWithPhone(values);
+      setResponse('phoneReg', response.data);
+      message.success('Phone registration successful');
+    } catch (error: any) {
+      setResponse('phoneReg', { error: error.response?.data || error.message });
+      message.error('Phone registration failed');
+    } finally {
+      setLoadingState('phoneReg', false);
     }
   };
 
@@ -434,6 +480,140 @@ const AuthTestingPage: React.FC = () => {
               </Button>
             </Form>
             {showRawResponses && renderResponse('apple')}
+          </StyledCard>
+        </Panel>
+
+        <Panel header="Send OTP" key="sendOTP">
+          <StyledCard
+            title="POST /auth/send-otp"
+            extra={<Tag color="blue">Public</Tag>}
+          >
+            <Form
+              form={otpForm}
+              onFinish={handleSendOTP}
+              layout="vertical"
+            >
+              <Form.Item
+                name="phone"
+                label="Phone Number"
+                rules={[{ required: true }]}
+              >
+                <Input placeholder="+1234567890" />
+              </Form.Item>
+              <Form.Item
+                name="purpose"
+                label="Purpose"
+                initialValue="registration"
+              >
+                <Input placeholder="registration" />
+              </Form.Item>
+              <Form.Item name="userId" label="User ID (Optional)">
+                <Input placeholder="uuid-string" />
+              </Form.Item>
+              <Button
+                type="primary"
+                htmlType="submit"
+                loading={loading.sendOTP}
+                icon={<PhoneOutlined />}
+              >
+                Send OTP
+              </Button>
+            </Form>
+            {showRawResponses && renderResponse('sendOTP')}
+          </StyledCard>
+        </Panel>
+
+        <Panel header="Verify OTP" key="verifyOTP">
+          <StyledCard
+            title="POST /auth/verify-otp"
+            extra={<Tag color="blue">Public</Tag>}
+          >
+            <Form onFinish={handleVerifyOTP} layout="vertical">
+              <Form.Item
+                name="phone"
+                label="Phone Number"
+                rules={[{ required: true }]}
+              >
+                <Input placeholder="+1234567890" />
+              </Form.Item>
+              <Form.Item
+                name="otp"
+                label="OTP Code"
+                rules={[{ required: true }]}
+              >
+                <Input placeholder="123456" maxLength={6} />
+              </Form.Item>
+              <Form.Item
+                name="purpose"
+                label="Purpose"
+                initialValue="registration"
+              >
+                <Input placeholder="registration" />
+              </Form.Item>
+              <Form.Item name="userId" label="User ID (Optional)">
+                <Input placeholder="uuid-string" />
+              </Form.Item>
+              <Button
+                type="primary"
+                htmlType="submit"
+                loading={loading.verifyOTP}
+                icon={<SafetyOutlined />}
+              >
+                Verify OTP
+              </Button>
+            </Form>
+            {showRawResponses && renderResponse('verifyOTP')}
+          </StyledCard>
+        </Panel>
+
+        <Panel header="Phone Registration" key="phoneReg">
+          <StyledCard
+            title="POST /auth/register-phone"
+            extra={<Tag color="blue">Public</Tag>}
+          >
+            <Form
+              form={phoneRegForm}
+              onFinish={handlePhoneRegistration}
+              layout="vertical"
+            >
+              <Form.Item
+                name="phone"
+                label="Phone Number"
+                rules={[{ required: true }]}
+              >
+                <Input placeholder="+1234567890" />
+              </Form.Item>
+              <Form.Item
+                name="firstName"
+                label="First Name"
+                rules={[{ required: true }]}
+              >
+                <Input placeholder="John" />
+              </Form.Item>
+              <Form.Item
+                name="lastName"
+                label="Last Name"
+                rules={[{ required: true }]}
+              >
+                <Input placeholder="Doe" />
+              </Form.Item>
+              <Form.Item
+                name="role"
+                label="Role"
+                initialValue="CUSTOMER"
+              >
+                <Input placeholder="CUSTOMER" />
+              </Form.Item>
+              <Button
+                type="primary"
+                htmlType="submit"
+                loading={loading.phoneReg}
+                icon={<UserAddOutlined />}
+              >
+                Register with Phone
+              </Button>
+            </Form>
+            {showRawResponses && renderResponse('phoneReg')}
           </StyledCard>
         </Panel>
 

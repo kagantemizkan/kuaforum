@@ -17,7 +17,10 @@ import {
   LoginDto, 
   GoogleOAuthDto, 
   AppleOAuthDto, 
-  RefreshTokenDto 
+  RefreshTokenDto,
+  SendOTPDto,
+  VerifyOTPDto,
+  PhoneRegistrationDto
 } from './dto';
 import { 
   AuthResponseDto, 
@@ -25,6 +28,8 @@ import {
   UserResponseDto, 
   TokensDto 
 } from './dto/auth-response.dto';
+import { SmsOtpService } from './services/sms-otp.service';
+import { OAuthService } from './services/oauth.service';
 
 interface JwtPayload {
   sub: string;
@@ -51,6 +56,8 @@ export class AuthService {
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    private readonly smsOtpService: SmsOtpService,
+    private readonly oauthService: OAuthService,
   ) {}
 
   async register(registerDto: RegisterDto): Promise<AuthResponseDto> {
@@ -295,10 +302,13 @@ export class AuthService {
   async googleOAuth(googleOAuthDto: GoogleOAuthDto): Promise<AuthResponseDto> {
     try {
       // Verify Google token and get user data
-      const userData = await this.verifyGoogleToken(googleOAuthDto.accessToken);
+      const userData = await this.oauthService.verifyGoogleToken(
+        googleOAuthDto.accessToken, 
+        googleOAuthDto.idToken
+      );
       
       // Find or create user
-      const user = await this.findOrCreateOAuthUser(userData);
+      const user = await this.oauthService.findOrCreateOAuthUser(userData);
 
       // Generate tokens
       const tokens = await this.generateTokens(user);
@@ -323,10 +333,13 @@ export class AuthService {
   async appleOAuth(appleOAuthDto: AppleOAuthDto): Promise<AuthResponseDto> {
     try {
       // Verify Apple token and get user data
-      const userData = await this.verifyAppleToken(appleOAuthDto);
+      const userData = await this.oauthService.verifyAppleToken(
+        appleOAuthDto.identityToken,
+        appleOAuthDto.authorizationCode
+      );
       
       // Find or create user
-      const user = await this.findOrCreateOAuthUser(userData);
+      const user = await this.oauthService.findOrCreateOAuthUser(userData);
 
       // Generate tokens
       const tokens = await this.generateTokens(user);
@@ -345,6 +358,109 @@ export class AuthService {
     } catch (error) {
       this.logger.error('Apple OAuth failed:', error);
       throw new UnauthorizedException('Apple authentication failed');
+    }
+  }
+
+  /**
+   * Send OTP for phone verification
+   */
+  async sendOTP(sendOtpDto: SendOTPDto): Promise<{ success: boolean; message: string }> {
+    const { phone, purpose = 'registration', userId } = sendOtpDto;
+
+    // If no userId provided, create a temporary user ID for the OTP process
+    let targetUserId = userId;
+    if (!targetUserId) {
+      targetUserId = uuidv4();
+    }
+
+    await this.smsOtpService.sendOTP(targetUserId, phone, purpose);
+
+    return {
+      success: true,
+      message: 'Verification code sent successfully',
+    };
+  }
+
+  /**
+   * Verify OTP and complete phone registration
+   */
+  async verifyOTP(verifyOtpDto: VerifyOTPDto): Promise<{ success: boolean; message: string; verified: boolean }> {
+    const { phone, otp, purpose = 'registration', userId } = verifyOtpDto;
+
+    if (!userId) {
+      throw new BadRequestException('User ID is required for OTP verification');
+    }
+
+    const verified = await this.smsOtpService.verifyOTP(userId, phone, otp, purpose);
+
+    return {
+      success: true,
+      message: 'Phone number verified successfully',
+      verified,
+    };
+  }
+
+  /**
+   * Register user with phone number only (after OTP verification)
+   */
+  async registerWithPhone(phoneRegistrationDto: PhoneRegistrationDto): Promise<AuthResponseDto> {
+    const { phone, firstName, lastName, role = 'CUSTOMER' } = phoneRegistrationDto;
+
+    // Check if user already exists
+    const existingUser = await this.prisma.user.findUnique({
+      where: { phone },
+    });
+
+    if (existingUser) {
+      throw new ConflictException('User with this phone number already exists');
+    }
+
+    try {
+      const result = await this.prisma.$transaction(async (tx) => {
+        // Create user without password (phone-only registration)
+        const user = await tx.user.create({
+          data: {
+            id: uuidv4(),
+            email: `${phone}@phone.local`, // Temporary email
+            phone,
+            firstName,
+            lastName,
+            role: role as UserRole,
+            isActive: true,
+            isPhoneVerified: true,
+          },
+        });
+
+        // Create customer profile for customers
+        if (role === 'CUSTOMER') {
+          await tx.customerProfile.create({
+            data: {
+              id: uuidv4(),
+              userId: user.id,
+            },
+          });
+        }
+
+        return user;
+      });
+
+      // Generate tokens
+      const tokens = await this.generateTokens(result);
+
+      // Save refresh token
+      await this.saveRefreshToken(result.id, tokens.refreshToken);
+
+      this.logger.log(`Phone registration successful: ${phone}`);
+
+      return {
+        success: true,
+        message: 'Registration successful',
+        user: this.mapUserToResponse(result),
+        tokens,
+      };
+    } catch (error) {
+      this.logger.error('Phone registration failed:', error);
+      throw new BadRequestException('Registration failed');
     }
   }
 

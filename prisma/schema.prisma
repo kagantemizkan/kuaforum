@@ -106,19 +106,24 @@ enum NotificationType {
 
 // User Management
 model User {
-  id          String   @id @default(uuid())
-  email       String   @unique
-  phone       String?  @unique
-  password    String
-  firstName   String
-  lastName    String
-  avatar      String?
-  role        UserRole @default(CUSTOMER)
-  isActive    Boolean  @default(true)
-  pushToken   String?  // For push notifications
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  deletedAt   DateTime?
+  id              String   @id @default(uuid())
+  email           String   @unique
+  phone           String?  @unique
+  password        String?  // Optional for OAuth users
+  firstName       String
+  lastName        String
+  avatar          String?
+  role            UserRole @default(CUSTOMER)
+  isActive        Boolean  @default(true)
+  isPhoneVerified Boolean  @default(false)
+  isEmailVerified Boolean  @default(false)
+  pushToken       String?  // For push notifications
+  // OAuth fields
+  googleId        String?  @unique
+  appleId         String?  @unique
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  deletedAt       DateTime?
 
   // Relations
   customerProfile  CustomerProfile?
@@ -130,6 +135,7 @@ model User {
   styleSuggestions StyleSuggestion[]
   staff            Staff[]
   notifications    Notification[]
+  otpVerifications OTPVerification[]
 
   @@map("users")
 }
@@ -430,4 +436,23 @@ model NotificationPreference {
   sms    Json   @default("{}")
 
   @@map("notification_preferences")
+}
+
+// OTP Verification
+model OTPVerification {
+  id        String   @id @default(uuid())
+  userId    String
+  phone     String
+  otp       String
+  purpose   String   // 'registration', 'login', 'password_reset'
+  verified  Boolean  @default(false)
+  attempts  Int      @default(0)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("otp_verifications")
 }

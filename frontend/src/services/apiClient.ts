@@ -125,6 +125,30 @@ export class ApiService {
     }) =>
       apiClient.post('/auth/oauth/apple', data),
 
+    // OTP endpoints
+    sendOTP: (data: { 
+      phone: string; 
+      purpose?: 'registration' | 'login' | 'password_reset';
+      userId?: string;
+    }) =>
+      apiClient.post('/auth/send-otp', data),
+
+    verifyOTP: (data: {
+      phone: string;
+      otp: string;
+      purpose?: 'registration' | 'login' | 'password_reset';
+      userId?: string;
+    }) =>
+      apiClient.post('/auth/verify-otp', data),
+
+    registerWithPhone: (data: {
+      phone: string;
+      firstName: string;
+      lastName: string;
+      role?: string;
+    }) =>
+      apiClient.post('/auth/register-phone', data),
+
     // Profile and status endpoints
     getProfile: () =>
       apiClient.get('/auth/me'),
