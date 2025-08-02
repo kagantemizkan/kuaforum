@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import Cookies from 'js-cookie';
-import { apiClient } from '../services/apiClient';
+import { ApiService, apiClient } from '../services/apiClient';
 import toast from 'react-hot-toast';
 
 interface User {
@@ -8,9 +8,12 @@ interface User {
   email: string;
   firstName: string;
   lastName: string;
-  role: string;
+  phone?: string;
   avatar?: string;
+  role: string;
   isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface AuthContextType {
@@ -19,8 +22,12 @@ interface AuthContextType {
   refreshToken: string | null;
   login: (email: string, password: string) => Promise<void>;
   register: (userData: RegisterData) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   refreshAccessToken: () => Promise<void>;
+  googleOAuth: (accessToken: string, idToken?: string) => Promise<void>;
+  appleOAuth: (data: AppleOAuthData) => Promise<void>;
+  getProfile: () => Promise<User>;
+  checkStatus: () => Promise<{ authenticated: boolean; user: any }>;
   isLoading: boolean;
 }
 
@@ -33,15 +40,34 @@ interface RegisterData {
   role: string;
 }
 
+interface AppleOAuthData {
+  identityToken: string;
+  authorizationCode?: string;
+  email?: string;
+  firstName?: string;
+  lastName?: string;
+}
+
 interface AuthResponse {
   success: boolean;
-  data: {
-    user: User;
-    tokens: {
-      accessToken: string;
-      refreshToken: string;
-      expiresIn: number;
-    };
+  message: string;
+  user: User;
+  tokens: {
+    accessToken: string;
+    refreshToken: string;
+    expiresIn: number;
+    tokenType: string;
+  };
+}
+
+interface RefreshResponse {
+  success: boolean;
+  message: string;
+  tokens: {
+    accessToken: string;
+    refreshToken: string;
+    expiresIn: number;
+    tokenType: string;
   };
 }
 
@@ -71,7 +97,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const storedRefreshToken = Cookies.get('refreshToken');
     const storedUser = Cookies.get('user');
 
-    if (storedToken && storedRefreshToken && storedUser) {
+            if (storedToken && storedRefreshToken && storedUser) {
       try {
         const userData = JSON.parse(storedUser);
         setToken(storedToken);
@@ -80,7 +106,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         apiClient.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
       } catch (error) {
         console.error('Error parsing stored user data:', error);
-        logout();
+        await logout();
       }
     }
     setIsLoading(false);
@@ -89,13 +115,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const login = async (email: string, password: string): Promise<void> => {
     try {
       setIsLoading(true);
-      const response = await apiClient.post<AuthResponse>('/auth/login', {
-        email,
-        password,
-      });
+      const response = await ApiService.auth.login({ email, password });
 
       if (response.data.success) {
-        const { user: userData, tokens } = response.data.data;
+        const { user: userData, tokens } = response.data;
         
         setUser(userData);
         setToken(tokens.accessToken);
@@ -112,7 +135,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         toast.success(`Welcome back, ${userData.firstName}!`);
       }
     } catch (error: any) {
-      const message = error.response?.data?.error?.message || 'Login failed';
+      const message = error.response?.data?.message || 'Login failed';
       toast.error(message);
       throw error;
     } finally {
@@ -123,10 +146,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const register = async (userData: RegisterData): Promise<void> => {
     try {
       setIsLoading(true);
-      const response = await apiClient.post<AuthResponse>('/auth/register', userData);
+      const response = await ApiService.auth.register(userData);
 
       if (response.data.success) {
-        const { user: newUser, tokens } = response.data.data;
+        const { user: newUser, tokens } = response.data;
         
         setUser(newUser);
         setToken(tokens.accessToken);
@@ -143,7 +166,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         toast.success(`Welcome, ${newUser.firstName}! Account created successfully.`);
       }
     } catch (error: any) {
-      const message = error.response?.data?.error?.message || 'Registration failed';
+      const message = error.response?.data?.message || 'Registration failed';
       toast.error(message);
       throw error;
     } finally {
@@ -151,20 +174,30 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const logout = (): void => {
-    setUser(null);
-    setToken(null);
-    setRefreshToken(null);
+  const logout = async (): Promise<void> => {
+    try {
+      // Call logout endpoint if we have a refresh token
+      if (refreshToken) {
+        await ApiService.auth.logout(refreshToken);
+      }
+    } catch (error) {
+      console.error('Logout API call failed:', error);
+    } finally {
+      // Always clear local state regardless of API call success
+      setUser(null);
+      setToken(null);
+      setRefreshToken(null);
 
-    // Remove from cookies
-    Cookies.remove('accessToken');
-    Cookies.remove('refreshToken');
-    Cookies.remove('user');
+      // Remove from cookies
+      Cookies.remove('accessToken');
+      Cookies.remove('refreshToken');
+      Cookies.remove('user');
 
-    // Remove authorization header
-    delete apiClient.defaults.headers.common['Authorization'];
+      // Remove authorization header
+      delete apiClient.defaults.headers.common['Authorization'];
 
-    toast.success('Logged out successfully');
+      toast.success('Logged out successfully');
+    }
   };
 
   const refreshAccessToken = async (): Promise<void> => {
@@ -173,19 +206,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         throw new Error('No refresh token available');
       }
 
-      const response = await apiClient.post<{
-        success: boolean;
-        data: {
-          accessToken: string;
-          refreshToken: string;
-          expiresIn: number;
-        };
-      }>('/auth/refresh', {
-        refreshToken,
-      });
+      const response = await ApiService.auth.refresh(refreshToken);
 
       if (response.data.success) {
-        const { accessToken, refreshToken: newRefreshToken } = response.data.data;
+        const { accessToken, refreshToken: newRefreshToken } = response.data.tokens;
         
         setToken(accessToken);
         setRefreshToken(newRefreshToken);
@@ -199,8 +223,94 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
     } catch (error: any) {
       console.error('Token refresh failed:', error);
-      logout();
+      await logout();
       throw error;
+    }
+  };
+
+  const googleOAuth = async (accessToken: string, idToken?: string): Promise<void> => {
+    try {
+      setIsLoading(true);
+      const response = await ApiService.auth.googleOAuth({ accessToken, idToken });
+
+      if (response.data.success) {
+        const { user: userData, tokens } = response.data;
+        
+        setUser(userData);
+        setToken(tokens.accessToken);
+        setRefreshToken(tokens.refreshToken);
+
+        // Store in cookies
+        Cookies.set('accessToken', tokens.accessToken, { expires: 1 });
+        Cookies.set('refreshToken', tokens.refreshToken, { expires: 7 });
+        Cookies.set('user', JSON.stringify(userData), { expires: 7 });
+
+        // Set authorization header
+        apiClient.defaults.headers.common['Authorization'] = `Bearer ${tokens.accessToken}`;
+
+        toast.success(`Welcome, ${userData.firstName}!`);
+      }
+    } catch (error: any) {
+      const message = error.response?.data?.message || 'Google authentication failed';
+      toast.error(message);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const appleOAuth = async (data: AppleOAuthData): Promise<void> => {
+    try {
+      setIsLoading(true);
+      const response = await ApiService.auth.appleOAuth(data);
+
+      if (response.data.success) {
+        const { user: userData, tokens } = response.data;
+        
+        setUser(userData);
+        setToken(tokens.accessToken);
+        setRefreshToken(tokens.refreshToken);
+
+        // Store in cookies
+        Cookies.set('accessToken', tokens.accessToken, { expires: 1 });
+        Cookies.set('refreshToken', tokens.refreshToken, { expires: 7 });
+        Cookies.set('user', JSON.stringify(userData), { expires: 7 });
+
+        // Set authorization header
+        apiClient.defaults.headers.common['Authorization'] = `Bearer ${tokens.accessToken}`;
+
+        toast.success(`Welcome, ${userData.firstName}!`);
+      }
+    } catch (error: any) {
+      const message = error.response?.data?.message || 'Apple authentication failed';
+      toast.error(message);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const getProfile = async (): Promise<User> => {
+    try {
+      const response = await ApiService.auth.getProfile();
+      if (response.data.success) {
+        return response.data.user;
+      }
+      throw new Error('Failed to fetch profile');
+    } catch (error: any) {
+      const message = error.response?.data?.message || 'Failed to fetch profile';
+      toast.error(message);
+      throw error;
+    }
+  };
+
+  const checkStatus = async (): Promise<{ authenticated: boolean; user: any }> => {
+    try {
+      const response = await ApiService.auth.checkStatus();
+      return response.data;
+    } catch (error: any) {
+      console.error('Status check failed:', error);
+      return { authenticated: false, user: null };
     }
   };
 
@@ -239,6 +349,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     register,
     logout,
     refreshAccessToken,
+    googleOAuth,
+    appleOAuth,
+    getProfile,
+    checkStatus,
     isLoading,
   };
 

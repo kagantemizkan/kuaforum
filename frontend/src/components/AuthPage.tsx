@@ -12,6 +12,7 @@ import {
   Alert,
   Row,
   Col,
+  message,
 } from 'antd';
 import {
   UserOutlined,
@@ -20,6 +21,11 @@ import {
   PhoneOutlined,
   LoginOutlined,
   UserAddOutlined,
+  GoogleOutlined,
+  AppleOutlined,
+  ProfileOutlined,
+  CheckCircleOutlined,
+  LogoutOutlined,
 } from '@ant-design/icons';
 import styled from 'styled-components';
 import { useAuth } from '../contexts/AuthContext';
@@ -50,12 +56,37 @@ const StyledTabs = styled(Tabs)`
   }
 `;
 
+const OAuthSection = styled.div`
+  margin: 24px 0;
+  padding: 16px 0;
+  border-top: 1px solid #f0f0f0;
+  border-bottom: 1px solid #f0f0f0;
+`;
+
+const TestingSection = styled.div`
+  margin-top: 24px;
+  padding: 16px;
+  background: #f9f9f9;
+  border-radius: 8px;
+`;
+
 const AuthPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('login');
   const [loginLoading, setLoginLoading] = useState(false);
   const [registerLoading, setRegisterLoading] = useState(false);
+  const [oauthLoading, setOauthLoading] = useState(false);
+  const [testingLoading, setTestingLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { login, register } = useAuth();
+  const { 
+    user, 
+    login, 
+    register, 
+    logout, 
+    googleOAuth, 
+    appleOAuth, 
+    getProfile, 
+    checkStatus 
+  } = useAuth();
 
   const [loginForm] = Form.useForm();
   const [registerForm] = Form.useForm();
@@ -66,7 +97,7 @@ const AuthPage: React.FC = () => {
       setError(null);
       await login(values.email, values.password);
     } catch (error: any) {
-      setError(error.response?.data?.error?.message || 'Login failed');
+      setError(error.response?.data?.message || 'Login failed');
     } finally {
       setLoginLoading(false);
     }
@@ -78,9 +109,83 @@ const AuthPage: React.FC = () => {
       setError(null);
       await register(values);
     } catch (error: any) {
-      setError(error.response?.data?.error?.message || 'Registration failed');
+      setError(error.response?.data?.message || 'Registration failed');
     } finally {
       setRegisterLoading(false);
+    }
+  };
+
+  const handleGoogleOAuth = async () => {
+    try {
+      setOauthLoading(true);
+      setError(null);
+      // For testing purposes, using a dummy token
+      // In real implementation, you'd get this from Google OAuth flow
+      const dummyToken = 'dummy_google_access_token_for_testing';
+      await googleOAuth(dummyToken);
+      message.success('Google OAuth test initiated (dummy token used)');
+    } catch (error: any) {
+      setError(error.response?.data?.message || 'Google OAuth failed');
+    } finally {
+      setOauthLoading(false);
+    }
+  };
+
+  const handleAppleOAuth = async () => {
+    try {
+      setOauthLoading(true);
+      setError(null);
+      // For testing purposes, using dummy data
+      // In real implementation, you'd get this from Apple OAuth flow
+      const dummyData = {
+        identityToken: 'dummy_apple_identity_token_for_testing',
+        email: 'test@privaterelay.appleid.com',
+        firstName: 'John',
+        lastName: 'Doe'
+      };
+      await appleOAuth(dummyData);
+      message.success('Apple OAuth test initiated (dummy token used)');
+    } catch (error: any) {
+      setError(error.response?.data?.message || 'Apple OAuth failed');
+    } finally {
+      setOauthLoading(false);
+    }
+  };
+
+  const handleGetProfile = async () => {
+    try {
+      setTestingLoading(true);
+      const profile = await getProfile();
+      message.success(`Profile fetched: ${profile.firstName} ${profile.lastName}`);
+      console.log('Profile data:', profile);
+    } catch (error: any) {
+      message.error(error.response?.data?.message || 'Failed to fetch profile');
+    } finally {
+      setTestingLoading(false);
+    }
+  };
+
+  const handleCheckStatus = async () => {
+    try {
+      setTestingLoading(true);
+      const status = await checkStatus();
+      message.success(`Auth status: ${status.authenticated ? 'Authenticated' : 'Not authenticated'}`);
+      console.log('Status data:', status);
+    } catch (error: any) {
+      message.error('Failed to check status');
+    } finally {
+      setTestingLoading(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      setTestingLoading(true);
+      await logout();
+    } catch (error: any) {
+      message.error('Logout failed');
+    } finally {
+      setTestingLoading(false);
     }
   };
 
@@ -312,6 +417,77 @@ const AuthPage: React.FC = () => {
 
         <Divider />
 
+        {!user && (
+          <OAuthSection>
+            <Title level={4} style={{ marginBottom: 16, textAlign: 'center' }}>
+              OAuth Testing
+            </Title>
+            <Space direction="vertical" style={{ width: '100%' }}>
+              <Button
+                type="default"
+                icon={<GoogleOutlined />}
+                loading={oauthLoading}
+                onClick={handleGoogleOAuth}
+                block
+                size="large"
+              >
+                Test Google OAuth
+              </Button>
+              <Button
+                type="default"
+                icon={<AppleOutlined />}
+                loading={oauthLoading}
+                onClick={handleAppleOAuth}
+                block
+                size="large"
+              >
+                Test Apple OAuth
+              </Button>
+            </Space>
+          </OAuthSection>
+        )}
+
+        {user && (
+          <TestingSection>
+            <Title level={4} style={{ marginBottom: 16, textAlign: 'center' }}>
+              Auth Endpoint Testing
+            </Title>
+            <Space direction="vertical" style={{ width: '100%' }}>
+              <Text style={{ textAlign: 'center', display: 'block', marginBottom: 16 }}>
+                Welcome, {user.firstName} {user.lastName}! ({user.role})
+              </Text>
+              <Button
+                type="primary"
+                icon={<ProfileOutlined />}
+                loading={testingLoading}
+                onClick={handleGetProfile}
+                block
+              >
+                Get Profile
+              </Button>
+              <Button
+                type="primary"
+                icon={<CheckCircleOutlined />}
+                loading={testingLoading}
+                onClick={handleCheckStatus}
+                block
+              >
+                Check Auth Status
+              </Button>
+              <Button
+                type="primary"
+                danger
+                icon={<LogoutOutlined />}
+                loading={testingLoading}
+                onClick={handleLogout}
+                block
+              >
+                Log Out
+              </Button>
+            </Space>
+          </TestingSection>
+        )}
+
         <Space direction="vertical" style={{ width: '100%' }}>
           <Text type="secondary" style={{ fontSize: '12px' }}>
             <strong>Demo Credentials:</strong>
@@ -324,6 +500,9 @@ const AuthPage: React.FC = () => {
           </Text>
           <Text type="secondary" style={{ fontSize: '12px' }}>
             Customer: customer@example.com / Customer123!
+          </Text>
+          <Text type="secondary" style={{ fontSize: '12px', marginTop: 8 }}>
+            <strong>Note:</strong> OAuth buttons use dummy tokens for testing backend endpoints.
           </Text>
         </Space>
       </StyledCard>

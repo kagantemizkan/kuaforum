@@ -23,6 +23,7 @@ import styled from 'styled-components';
 
 // Components
 import AuthPage from './components/AuthPage';
+import AuthTestingPage from './components/AuthTestingPage';
 import UsersPage from './components/UsersPage';
 import SalonsPage from './components/SalonsPage';
 import BookingsPage from './components/BookingsPage';
@@ -103,6 +104,12 @@ const menuItems = [
     icon: <LoginOutlined />,
     label: 'Authentication',
     path: '/auth',
+  },
+  {
+    key: 'auth-testing',
+    icon: <ApiOutlined />,
+    label: 'Auth Testing',
+    path: '/auth-testing',
   },
   {
     key: 'users',
@@ -222,6 +229,8 @@ const AppContent: React.FC = () => {
     switch (selectedKey) {
       case 'auth':
         return <AuthPage />;
+      case 'auth-testing':
+        return <AuthTestingPage />;
       case 'users':
         return <UsersPage />;
       case 'salons':
