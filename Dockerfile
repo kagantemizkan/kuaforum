@@ -1,5 +1,5 @@
 # Multi-stage build for NestJS Backend
-FROM node:18-alpine AS base
+FROM node:20-alpine AS base
 
 # Install dependencies only when needed
 FROM base AS deps
@@ -15,6 +15,10 @@ RUN npm i --only=production && npm cache clean --force
 # Rebuild the source code only when needed
 FROM base AS builder
 WORKDIR /app
+# Install openssl-dev and core openssl for building and generation
+# openssl-dev is often needed for compilation, and core openssl for runtime
+# We'll rely on the default OpenSSL provided by Alpine here (likely 3.x)
+RUN apk add --no-cache openssl openssl-dev
 
 # Copy package files and install all dependencies
 COPY package*.json ./
@@ -33,6 +37,10 @@ RUN npm run build --legacy-peer-deps || true
 # Production image, copy all the files and run next
 FROM base AS runner
 WORKDIR /app
+
+# Install only the core `openssl` package for runtime
+# Alpine's default `openssl` package will include the necessary runtime libraries (likely for OpenSSL 3.x).
+RUN apk add --no-cache openssl
 
 # Create non-root user
 RUN addgroup --system --gid 1001 nodejs
