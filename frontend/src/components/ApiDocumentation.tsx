@@ -1,6 +1,6 @@
 import React from 'react';
 import { Typography, Card, Button, Space } from 'antd';
-import { ExternalLinkOutlined } from '@ant-design/icons';
+import { LinkOutlined } from '@ant-design/icons';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -18,7 +18,7 @@ const ApiDocumentation: React.FC = () => {
       
       <Space direction="vertical" size="large" style={{ width: '100%', marginTop: 24 }}>
         <Card title="Swagger Documentation" extra={
-          <Button type="primary" icon={<ExternalLinkOutlined />} onClick={openSwaggerDocs}>
+          <Button type="primary" icon={<LinkOutlined />} onClick={openSwaggerDocs}>
             Open Swagger UI
           </Button>
         }>
