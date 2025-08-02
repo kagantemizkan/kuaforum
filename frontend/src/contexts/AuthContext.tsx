@@ -229,7 +229,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return () => {
       apiClient.interceptors.response.eject(interceptor);
     };
-  }, [refreshToken]);
+  }, [refreshToken, refreshAccessToken]);
 
   const value: AuthContextType = {
     user,
